@@ -208,7 +208,8 @@ class FallbackAPIHandler(SimpleHTTPRequestHandler):
                         line = line.strip()
                         if line and not line.startswith("#") and "=" in line:
                             k, v = line.split("=", 1)
-                            env_vars[k.strip()] = v.strip()
+                            v = v.strip().strip('"').strip("'")
+                            env_vars[k.strip()] = v
             js_content = f"window.ENV = {json.dumps(env_vars)};"
             raw = js_content.encode("utf-8")
             self.send_response(200)

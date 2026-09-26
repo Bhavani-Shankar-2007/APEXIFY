@@ -4,8 +4,8 @@
 // ============================================================================
 
 const API_CONFIG = {
-  USE_BACKEND: false,
-  BASE_URL: "http://localhost:8080/api/v1"
+  USE_BACKEND: true,
+  BASE_URL: "http://localhost:8000/api"
 };
 
 const REGIME_PHOTOS = {
@@ -98,14 +98,28 @@ function toggleDarkMode() {
   if (homeMiniTileLayer) homeMiniTileLayer.setUrl(tileUrl);
   if (fullGisTileLayer) fullGisTileLayer.setUrl(tileUrl);
 
-  updateAllUI();
-  updateSimulator();
+  // Ensure cache is populated before UI updates
+  if (API_CONFIG.USE_BACKEND && window.apiService) {
+    window.apiService.refreshCache(state.selectedRegionId, state.leadDay).then(() => {
+      updateAllUI();
+      updateSimulator();
+    });
+  } else {
+    updateAllUI();
+    updateSimulator();
+  }
 }
 
 // ============================================================================
 // METRICS CALCULATION
 // ============================================================================
+window.apiCache = window.apiCache || {};
+
 function getRegionMetrics(regimeId, regionId, day) {
+  const cacheKey = `${regionId}_${day}`;
+  if (window.apiCache[cacheKey]) {
+      return window.apiCache[cacheKey];
+  }
   const regime = WEATHER_REGIMES[regimeId];
   const profile =
     regime.regionBustProfiles[regionId] || [20, 25, 35, 45, 55, 60, 58, 52, 48, 45];
@@ -674,30 +688,50 @@ function selectRegime(regimeId) {
   })).sort((a, b) => b.b - a.b)[0];
   state.selectedRegionId = top.id;
 
-  updateAllUI();
+  if (API_CONFIG.USE_BACKEND && window.apiService) {
+      window.apiService.refreshCache(state.selectedRegionId, state.leadDay).then(() => updateAllUI());
+  } else {
+      updateAllUI();
+  }
 }
 
 function selectRegion(regionId) {
   state.selectedRegionId = regionId;
-  updateAllUI();
+  if (API_CONFIG.USE_BACKEND && window.apiService) {
+      window.apiService.refreshCache(state.selectedRegionId, state.leadDay).then(() => updateAllUI());
+  } else {
+      updateAllUI();
+  }
 }
 
 function selectRegionAndGoHome(regionId) {
   state.selectedRegionId = regionId;
   switchTab("home");
-  updateAllUI();
+  if (API_CONFIG.USE_BACKEND && window.apiService) {
+      window.apiService.refreshCache(state.selectedRegionId, state.leadDay).then(() => updateAllUI());
+  } else {
+      updateAllUI();
+  }
 }
 
 function selectCellAndGoHome(regionId, day) {
   state.selectedRegionId = regionId;
   state.leadDay = day;
   switchTab("home");
-  updateAllUI();
+  if (API_CONFIG.USE_BACKEND && window.apiService) {
+      window.apiService.refreshCache(state.selectedRegionId, state.leadDay).then(() => updateAllUI());
+  } else {
+      updateAllUI();
+  }
 }
 
 function setLeadDay(day) {
   state.leadDay = day;
-  updateAllUI();
+  if (API_CONFIG.USE_BACKEND && window.apiService) {
+      window.apiService.refreshCache(state.selectedRegionId, state.leadDay).then(() => updateAllUI());
+  } else {
+      updateAllUI();
+  }
 }
 
 function setCurveMode(mode) {
