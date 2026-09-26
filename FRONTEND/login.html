@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - MausamAI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#4D94DB',
+              dark: '#1F3153',
+            },
+            slate: {
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    .dot-pattern {
+      background-image: radial-gradient(rgba(77, 148, 219, 0.15) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    
+    html.dark .dot-pattern {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
+    
+    .hero-bg {
+      background-color: #ffffff;
+    }
+    html.dark .hero-bg {
+      background-color: #000000;
+    }
+  </style>
+</head>
+<body class="hero-bg dot-pattern text-slate-800 dark:text-slate-100 antialiased min-h-screen flex flex-col transition-colors duration-200 relative">
+  
+  <!-- Subtle Gradient Blobs -->
+  <div class="absolute top-0 right-0 w-96 h-96 bg-brand/10 dark:bg-brand/5 blur-3xl rounded-full pointer-events-none"></div>
+  <div class="absolute bottom-0 left-0 w-96 h-96 bg-yellow-400/10 dark:bg-yellow-400/5 blur-3xl rounded-full pointer-events-none"></div>
+
+  <!-- Top Right Icons -->
+  <div class="absolute top-6 right-6 flex items-center gap-4">
+    <div class="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-300 cursor-pointer hover:text-brand transition-colors">
+      <i data-lucide="globe" class="w-4 h-4"></i>
+      <span>English</span>
+      <i data-lucide="chevron-down" class="w-4 h-4"></i>
+    </div>
+    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-300 transition-colors">
+      <i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i>
+    </button>
+  </div>
+
+  <div class="flex-grow flex flex-col items-center justify-center p-4 z-10 relative">
+    
+    <!-- Logo & Title -->
+    <a href="index.html" class="flex flex-col items-center justify-center mb-6 cursor-pointer group">
+      <div class="relative w-12 h-12 mb-3 transform group-hover:scale-105 transition-transform">
+        <span class="absolute top-0 left-0 w-8 h-8 rounded-full bg-brand"></span>
+        <span class="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-yellow-400"></span>
+      </div>
+      <h1 class="text-2xl font-extrabold tracking-tight text-brand-dark dark:text-white">MausamAI</h1>
+      <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-widest text-center">
+        AI-Powered Forecast Bust Gateway
+      </p>
+    </a>
+
+    <!-- Card -->
+    <div class="w-full max-w-[420px] bg-white dark:bg-slate-800 rounded-[28px] shadow-2xl shadow-gray-200/60 dark:shadow-none border border-gray-100 dark:border-slate-700 p-8 pt-6">
+      
+      <!-- Tabs -->
+      <div class="flex items-center bg-gray-50 dark:bg-slate-900 rounded-xl p-1 mb-8">
+        <button id="tab-signin" onclick="switchTab('signin')" class="flex-1 py-2 text-sm font-bold bg-white dark:bg-slate-700 shadow-sm rounded-lg text-brand-dark dark:text-white transition-all">Sign In</button>
+        <button id="tab-signup" onclick="switchTab('signup')" class="flex-1 py-2 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-brand-dark dark:hover:text-white transition-all">Sign Up</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="signin-form" class="space-y-5" onsubmit="handleEmailLogin(event)">
+        <!-- Email -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i data-lucide="mail" class="w-4 h-4 text-gray-400"></i>
+            </div>
+            <input type="email" id="email-input" class="w-full pl-10 pr-4 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent outline-none dark:text-white text-sm transition-all font-medium" required />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">Password</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i data-lucide="lock" class="w-4 h-4 text-gray-400"></i>
+            </div>
+            <input type="password" id="password-input" class="w-full pl-10 pr-10 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent outline-none dark:text-white text-sm transition-all font-medium" placeholder="••••••••••••" required />
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onclick="togglePassword('password-input', 'eye-icon')">
+              <i data-lucide="eye" id="eye-icon" class="w-4 h-4"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remember & Forgot -->
+        <div class="flex items-center justify-between">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" class="w-4 h-4 rounded text-brand border-gray-300 focus:ring-brand accent-brand bg-gray-50 dark:bg-slate-900 dark:border-slate-600">
+            <span class="text-xs font-semibold text-gray-600 dark:text-gray-300">Remember me</span>
+          </label>
+          <a href="#" class="text-xs font-bold text-brand hover:text-blue-600 transition-colors">Forgot password?</a>
+        </div>
+
+        <!-- Sign In Button -->
+        <button type="submit" class="w-full bg-brand text-white font-bold py-3.5 rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-brand/25 mt-2 flex items-center justify-center gap-2">
+          Sign In
+        </button>
+      </form>
+
+      <!-- Sign Up Form (Hidden by default) -->
+      <form id="signup-form" class="space-y-4 hidden" onsubmit="handleSignUp(event)">
+        <!-- Name -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i data-lucide="user" class="w-4 h-4 text-gray-400"></i>
+            </div>
+            <input type="text" id="signup-name" class="w-full pl-10 pr-4 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent outline-none dark:text-white text-sm transition-all font-medium" placeholder="John Doe" required />
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i data-lucide="mail" class="w-4 h-4 text-gray-400"></i>
+            </div>
+            <input type="email" id="signup-email" class="w-full pl-10 pr-4 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent outline-none dark:text-white text-sm transition-all font-medium" required />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">Password</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i data-lucide="lock" class="w-4 h-4 text-gray-400"></i>
+            </div>
+            <input type="password" id="signup-password" class="w-full pl-10 pr-10 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent outline-none dark:text-white text-sm transition-all font-medium" placeholder="••••••••••••" required minlength="6" />
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" onclick="togglePassword('signup-password', 'eye-icon-signup')">
+              <i data-lucide="eye" id="eye-icon-signup" class="w-4 h-4"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role -->
+        <div>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">Role</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i data-lucide="briefcase" class="w-4 h-4 text-gray-400"></i>
+            </div>
+            <select id="signup-role" class="w-full pl-10 pr-4 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent outline-none dark:text-white text-sm transition-all font-medium appearance-none" required>
+              <option value="" disabled selected>Select your role...</option>
+              <option value="Citizen">Citizen</option>
+              <option value="Officer">Officer</option>
+              <option value="Analyst">Analyst</option>
+            </select>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sign Up Button -->
+        <button type="submit" class="w-full bg-brand text-white font-bold py-3.5 rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-brand/25 mt-2 flex items-center justify-center gap-2">
+          Create Account
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="mt-8 flex items-center justify-center relative">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-200 dark:border-slate-700"></div>
+        </div>
+        <div class="relative px-4 bg-white dark:bg-slate-800 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+          Or continue with
+        </div>
+      </div>
+
+      <!-- Google Button -->
+      <button type="button" onclick="loginWithGoogle()" class="mt-6 w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-200 px-4 py-3.5 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-slate-700 transition-all text-sm group">
+        <svg class="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+
+    </div>
+
+    <!-- Footer -->
+    <p class="mt-8 text-[11px] font-semibold text-gray-400 tracking-wider">
+      MAUSAM-SHIELD &bull; Weather talks. We listen.
+    </p>
+
+  </div>
+
+  <script src="/config.js?t=1"></script>
+  <script src="supabase_auth.js?t=1"></script>
+  <script>
+    lucide.createIcons();
+    
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    
+    if (localStorage.getItem('theme') === 'light') {
+      document.documentElement.classList.remove('dark');
+      themeIcon.setAttribute('data-lucide', 'moon');
+    } else {
+      document.documentElement.classList.add('dark');
+      themeIcon.setAttribute('data-lucide', 'sun');
+    }
+    lucide.createIcons();
+
+    themeToggle.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+      lucide.createIcons();
+    });
+
+    // Tab Switching Logic
+    function switchTab(tab) {
+      const signinForm = document.getElementById('signin-form');
+      const signupForm = document.getElementById('signup-form');
+      const tabSignin = document.getElementById('tab-signin');
+      const tabSignup = document.getElementById('tab-signup');
+      
+      const activeClass = ['bg-white', 'dark:bg-slate-700', 'shadow-sm', 'text-brand-dark', 'dark:text-white'];
+      const inactiveClass = ['text-gray-500', 'dark:text-gray-400', 'hover:text-brand-dark', 'dark:hover:text-white', 'bg-transparent', 'shadow-none'];
+
+      if (tab === 'signin') {
+        signinForm.classList.remove('hidden');
+        signupForm.classList.add('hidden');
+        
+        tabSignin.classList.add(...activeClass);
+        tabSignin.classList.remove(...inactiveClass);
+        tabSignup.classList.add(...inactiveClass);
+        tabSignup.classList.remove(...activeClass);
+      } else {
+        signupForm.classList.remove('hidden');
+        signinForm.classList.add('hidden');
+        
+        tabSignup.classList.add(...activeClass);
+        tabSignup.classList.remove(...inactiveClass);
+        tabSignin.classList.add(...inactiveClass);
+        tabSignin.classList.remove(...activeClass);
+      }
+    }
+
+    function togglePassword(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        input.type = 'password';
+        icon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    function showError(message) {
+      // Find or create an error banner
+      let errorDiv = document.getElementById('error-banner');
+      if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'error-banner';
+        errorDiv.className = 'w-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-semibold p-3 rounded-xl mb-4 text-center border border-red-200 dark:border-red-800/50';
+        // Insert at top of card (before the tabs)
+        const tabs = document.querySelector('.bg-gray-50.dark\\:bg-slate-900.rounded-xl.p-1.mb-8');
+        tabs.parentNode.insertBefore(errorDiv, tabs);
+      }
+      errorDiv.textContent = message;
+      
+      // Auto-hide after 5 seconds
+      setTimeout(() => {
+        if(errorDiv) errorDiv.remove();
+      }, 5000);
+    }
+
+    async function loginWithGoogle() {
+      if(!supabaseClient) { showError('Supabase client not initialized! Please refresh.'); return; }
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin + '/dashboard.html'
+          }
+        });
+        if (error) throw error;
+      } catch (err) {
+        showError("Google Auth Error: " + err.message);
+      }
+    }
+
+    async function handleEmailLogin(e) {
+      e.preventDefault();
+      if(!supabaseClient) { showError('Supabase client not initialized! Please refresh.'); return; }
+      
+      const email = document.getElementById('email-input').value;
+      const password = document.getElementById('password-input').value;
+      
+      if(!email || !password) {
+        showError("Please enter all fields");
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+        
+        if (error) {
+          showError("Login failed: " + error.message);
+        } else {
+          window.location.href = 'dashboard.html';
+        }
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    async function handleSignUp(e) {
+      e.preventDefault();
+      if(!supabaseClient) { showError('Supabase client not initialized! Please refresh.'); return; }
+
+      const name = document.getElementById('signup-name').value;
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
+      const role = document.getElementById('signup-role').value;
+
+      if(!name || !email || !password || !role) {
+        showError("Please enter all fields");
+        return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              full_name: name,
+              role: role
+            }
+          }
+        });
+
+        if (error) {
+          showError("Sign up failed: " + error.message);
+        } else {
+          if(data.user && data.user.identities && data.user.identities.length === 0) {
+              showError("Email already in use or sign up restricted.");
+          } else if (data.session) {
+             window.location.href = 'dashboard.html';
+          } else {
+             // Use green color for success temporarily
+             let successDiv = document.createElement('div');
+             successDiv.className = 'w-full bg-green-50 text-green-600 text-sm font-semibold p-3 rounded-xl mb-4 text-center border border-green-200';
+             successDiv.textContent = "Sign up successful! Please check your email to verify your account.";
+             const tabs = document.querySelector('.bg-gray-50.dark\\:bg-slate-900.rounded-xl.p-1.mb-8');
+             tabs.parentNode.insertBefore(successDiv, tabs);
+             setTimeout(() => successDiv.remove(), 5000);
+             switchTab('signin');
+          }
+        }
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    // Redirect if already logged in
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) {
+        window.location.href = 'dashboard.html';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MausamAI — Weather Forecast Bust &amp; Confidence Platform</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Google Fonts: Poppins & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-gray-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 antialiased transition-colors duration-200">
+
+  <!-- OUTER SHELL FRAME -->
+  <div class="app-frame bg-gray-50 dark:bg-slate-900">
+
+    <!-- ===================================================================
+         LEFT SIDEBAR — White matching dashboard in Light Mode, Dark Slate in Dark Mode
+         =================================================================== -->
+    <aside class="navy-sidebar bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 transition-colors duration-200">
+      <div class="sidebar-logo" onclick="switchTab('home')" title="MausamAI Forecast Confidence">
+        <div class="logo-dot-cluster">
+          <span class="c1 bg-[#4D94DB]"></span>
+          <span class="c2"></span>
+        </div>
+        <span class="logo-brand-text text-[#1F3153] dark:text-white">MausamAI</span>
+      </div>
+
+      <nav class="navy-nav">
+        <button
+          class="navy-nav-item active border-l-4 border-[#4D94DB] bg-[#4D94DB]/10 text-[#4D94DB] font-semibold"
+          data-tab="home"
+          onclick="switchTab('home')"
+        >
+          <i data-lucide="home" class="text-[#4D94DB]"></i>
+          <span class="nav-label">Home</span>
+        </button>
+
+        <button
+          class="navy-nav-item border-l-4 border-transparent text-gray-500 dark:text-gray-300 hover:text-[#4D94DB] hover:bg-gray-100 dark:hover:bg-slate-700/50"
+          data-tab="forecast"
+          onclick="switchTab('forecast')"
+        >
+          <i data-lucide="compass" class="text-[#4D94DB]"></i>
+          <span class="nav-label">Forecast Map</span>
+        </button>
+
+        <button
+          class="navy-nav-item border-l-4 border-transparent text-gray-500 dark:text-gray-300 hover:text-[#4D94DB] hover:bg-gray-100 dark:hover:bg-slate-700/50"
+          data-tab="locations"
+          onclick="switchTab('locations')"
+        >
+          <i data-lucide="map-pin" class="text-[#4D94DB]"></i>
+          <span class="nav-label">Locations</span>
+        </button>
+
+        <button
+          class="navy-nav-item border-l-4 border-transparent text-gray-500 dark:text-gray-300 hover:text-[#4D94DB] hover:bg-gray-100 dark:hover:bg-slate-700/50"
+          data-tab="analytics"
+          onclick="switchTab('analytics')"
+        >
+          <i data-lucide="pie-chart" class="text-[#4D94DB]"></i>
+          <span class="nav-label">Analytics</span>
+        </button>
+
+        <button
+          class="navy-nav-item border-l-4 border-transparent text-gray-500 dark:text-gray-300 hover:text-[#4D94DB] hover:bg-gray-100 dark:hover:bg-slate-700/50"
+          data-tab="calendar"
+          onclick="switchTab('calendar')"
+        >
+          <i data-lucide="calendar" class="text-[#4D94DB]"></i>
+          <span class="nav-label">Day 1–10</span>
+        </button>
+
+        <button
+          class="navy-nav-item border-l-4 border-transparent text-gray-500 dark:text-gray-300 hover:text-[#4D94DB] hover:bg-gray-100 dark:hover:bg-slate-700/50"
+          data-tab="settings"
+          onclick="switchTab('settings')"
+        >
+          <i data-lucide="settings" class="text-[#4D94DB]"></i>
+          <span class="nav-label">Simulator</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Dark Mode Toggle at Bottom -->
+      <div class="mt-auto px-6 pt-6 border-t border-gray-100 dark:border-slate-700">
+        <button
+          onclick="toggleDarkMode()"
+          class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-gray-100 dark:bg-slate-700/70 text-gray-700 dark:text-slate-200 text-xs font-semibold hover:bg-[#4D94DB]/15 transition"
+        >
+          <span class="flex items-center gap-2">
+            <i data-lucide="moon" id="sidebar-theme-icon" class="w-4 h-4 text-[#4D94DB]"></i>
+            <span id="sidebar-theme-label">Dark Mode</span>
+          </span>
+          <span class="w-8 h-4 rounded-full bg-gray-300 dark:bg-[#4D94DB] relative flex items-center p-0.5 transition">
+            <span id="theme-toggle-knob" class="w-3 h-3 rounded-full bg-white transform transition translate-x-0 dark:translate-x-4"></span>
+          </span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ===================================================================
+         WORKSPACE (TOPBAR + CENTER MAIN + RIGHT PANEL)
+         =================================================================== -->
+    <div class="workspace-area bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
+
+      <!-- TOP BAR: SEARCH + REGIME PILLS + DARK MODE TOGGLE + PROFILE ICONS -->
+      <header class="top-header bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 transition-colors duration-200">
+        <div class="search-pill-box bg-gray-100 dark:bg-slate-700">
+          <input
+            type="text"
+            id="region-search-input"
+            class="dark:text-white"
+            placeholder="Search region or weather system (e.g. Odisha, Mumbai, Cyclone)..."
+            oninput="handleSearchInput(this.value)"
+          />
+          <i data-lucide="search" class="search-icon text-[#4D94DB]"></i>
+        </div>
+
+        <!-- Weather System / Regime Quick Selector Pills -->
+        <div class="regime-pill-bar">
+          <button class="r-pill active" data-regime="monsoon_depression" onclick="selectRegime('monsoon_depression')">Monsoon Dep.</button>
+          <button class="r-pill" data-regime="heavy_rainfall" onclick="selectRegime('heavy_rainfall')">Heavy Rain</button>
+          <button class="r-pill" data-regime="western_disturbance" onclick="selectRegime('western_disturbance')">Western Dist.</button>
+          <button class="r-pill" data-regime="cyclone" onclick="selectRegime('cyclone')">Cyclone</button>
+          <button class="r-pill" data-regime="heat_wave" onclick="selectRegime('heat_wave')">Heat Wave</button>
+          <button class="r-pill" data-regime="break_monsoon" onclick="selectRegime('break_monsoon')">Break Monsoon</button>
+        </div>
+
+        <div class="top-profile-actions">
+          <!-- Header Dark Mode Button -->
+          <button
+            class="theme-btn-top"
+            onclick="toggleDarkMode()"
+            title="Toggle Light / Dark Mode"
+          >
+            <i data-lucide="moon" id="top-theme-icon" class="text-[#4D94DB]"></i>
+          </button>
+
+          <button class="top-icon-btn" onclick="switchTab('locations')" title="Active Forecast Bust Alerts">
+            <i data-lucide="bell" class="text-[#1F3153] dark:text-slate-200"></i>
+            <span class="bell-dot bg-[#4D94DB]" id="bell-alert-count">4</span>
+          </button>
+
+          <div class="relative">
+            <button id="profile-btn" onclick="toggleProfileDropdown()" class="avatar-circle focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 dark:focus:ring-offset-slate-800 transition-all hover:scale-105" title="Your Profile">
+              <img id="nav-profile-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234D94DB'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>" alt="User" />
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-100 dark:border-slate-700 overflow-hidden z-50">
+              <div class="p-4 border-b border-gray-100 dark:border-slate-700">
+                <p id="dropdown-name" class="text-sm font-bold text-gray-800 dark:text-white truncate">User Name</p>
+                <p id="dropdown-email" class="text-xs font-medium text-gray-500 dark:text-gray-400 truncate mt-1">user@example.com</p>
+              </div>
+              <div class="p-2">
+                <button onclick="handleDashboardLogout()" class="w-full text-left px-3 py-2 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors flex items-center gap-2">
+                  <i data-lucide="log-out" class="w-4 h-4"></i> Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- MAIN 2-COLUMN CONTENT GRID (CENTER + RIGHT SIDEBAR PANEL) -->
+      <div class="content-split bg-gray-50 dark:bg-slate-900">
+
+        <!-- ===============================================================
+             CENTER COLUMN (SWITCHES BY ACTIVE SIDEBAR TAB)
+             =============================================================== -->
+        <main class="center-column bg-gray-50 dark:bg-slate-900">
+
+          <!-- ==================== TAB 1: HOME ==================== -->
+          <section id="view-home" class="tab-view active">
+            <!-- Current Location / Selected Region Header -->
+            <div class="location-header-row">
+              <div>
+                <span class="small-muted-label" id="current-regime-label">Current Monitored Region • Bay of Bengal Monsoon Depression</span>
+                <div class="location-title-wrap">
+                  <h1 class="location-title dark:text-white" id="main-location-title">Odisha &amp; Coastal AP, India</h1>
+                  <select id="quick-region-select" class="region-select-clean" onchange="selectRegion(this.value)">
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+              </div>
+              <button class="crosshair-btn" onclick="switchTab('forecast')" title="Open Full Confidence GIS Map">
+                <i data-lucide="crosshair" class="text-[#4D94DB]"></i>
+              </button>
+            </div>
+
+            <!-- HERO ROW: SCENIC WEATHER CARD + INTERACTIVE MAP/CITY CARD -->
+            <div class="hero-cards-row">
+              <!-- Scenic Weather / Confidence Hero Card -->
+              <div class="scenic-hero-card" id="scenic-hero-card">
+                <div class="scenic-overlay">
+                  <div class="scenic-left">
+                    <div class="weather-3d-icon">
+                      <svg viewBox="0 0 64 64" width="58" height="58" fill="none">
+                        <circle cx="38" cy="24" r="12" fill="url(#sunGrad)" />
+                        <path d="M18 42H46C51.5 42 55 38 55 33C55 28.5 51.5 24.8 47 24.2C45.2 17.5 39 13 31.8 13C23.5 13 16.8 19.4 16.2 27.5C11.5 28.4 8 32.5 8 37.2C8 40 12.5 42 18 42Z" fill="url(#cloudGrad)" />
+                        <path d="M22 48L20 54M32 48L30 54M42 48L40 54" stroke="#4D94DB" stroke-width="2.5" stroke-linecap="round"/>
+                        <defs>
+                          <linearGradient id="sunGrad" x1="26" y1="12" x2="50" y2="36" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fde047"/>
+                            <stop offset="1" stop-color="#f59e0b"/>
+                          </linearGradient>
+                          <linearGradient id="cloudGrad" x1="8" y1="13" x2="55" y2="42" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#ffffff" stop-opacity="0.95"/>
+                            <stop offset="1" stop-color="#cbd5e1" stop-opacity="0.88"/>
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </div>
+                    <div class="hero-big-metric">
+                      <span id="hero-conf-number">22</span><sup class="deg-symbol">%</sup>
+                      <small class="hero-metric-caption">Confidence</small>
+                    </div>
+                  </div>
+
+                  <div class="scenic-right">
+                    <div class="scenic-day-text" id="hero-day-label">Day 5 (+120h Lead)</div>
+                    <div class="scenic-condition-row">
+                      <i data-lucide="cloud-lightning"></i>
+                      <span id="hero-bust-status">78% Bust Risk • Error-Prone</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Companion Interactive Map Preview / Switch Region Card -->
+              <div class="companion-add-card dark:bg-slate-800 dark:border-slate-700" onclick="switchTab('forecast')" title="Click to explore interactive Confidence Map">
+                <div id="home-mini-map" class="home-mini-map"></div>
+                <div class="companion-overlay-pill dark:bg-slate-800/95 dark:text-white">
+                  <span>+ Explore Confidence Map</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- FORECAST BUST & CONFIDENCE HIGHLIGHTS -->
+            <div class="section-block">
+              <div class="section-title-row">
+                <h2 class="section-heading dark:text-white">Forecast Confidence Highlights (<span id="highlights-day-tag">Day 5</span>)</h2>
+                <div class="day-pill-selector dark:bg-slate-800 dark:border-slate-700" id="home-day-pills">
+                  <!-- D1 .. D10 buttons -->
+                </div>
+              </div>
+
+              <div class="highlights-grid">
+                <div class="highlight-card dark:bg-slate-800 dark:border-slate-700">
+                  <span class="hl-label">Bust Probability</span>
+                  <strong class="hl-value dark:text-white" id="hl-bust-prob">78%</strong>
+                  <span class="hl-sub" id="hl-bust-tag">High Error Risk</span>
+                </div>
+
+                <div class="highlight-card dark:bg-slate-800 dark:border-slate-700">
+                  <span class="hl-label">Forecast Confidence</span>
+                  <strong class="hl-value dark:text-white" id="hl-conf-score">22%</strong>
+                  <span class="hl-sub">NWP Reliability</span>
+                </div>
+
+                <div class="highlight-card dark:bg-slate-800 dark:border-slate-700">
+                  <span class="hl-label">Model Spread</span>
+                  <strong class="hl-value dark:text-white" id="hl-spread-val">±68 mm</strong>
+                  <span class="hl-sub">GFS vs ECMWF</span>
+                </div>
+
+                <div class="highlight-card wide-card dark:bg-slate-800 dark:border-slate-700">
+                  <span class="hl-label">NWP Run Comparison (GFS &amp; ECMWF)</span>
+                  <div class="up-down-row">
+                    <div class="ud-item">
+                      <span class="purple-arrow-circle bg-[#4D94DB]"><i data-lucide="arrow-up"></i></span>
+                      <div>
+                        <strong class="dark:text-white" id="hl-gfs-val">148 mm</strong>
+                        <small>IMD-GFS</small>
+                      </div>
+                    </div>
+                    <div class="ud-item">
+                      <span class="purple-arrow-circle bg-[#1F3153]"><i data-lucide="arrow-down"></i></span>
+                      <div>
+                        <strong class="dark:text-white" id="hl-ecmwf-val">80 mm</strong>
+                        <small>ECMWF-IFS</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOTTOM SMOOTH SKY-BLUE SPLINE CHART -->
+            <div class="spline-card dark:bg-slate-800 dark:border-slate-700">
+              <div class="spline-header">
+                <div class="spline-tabs">
+                  <button class="spline-tab active" id="tab-curve-bust" onclick="setCurveMode('bust')">Bust Probability (Day 1–10)</button>
+                  <button class="spline-tab" id="tab-curve-conf" onclick="setCurveMode('confidence')">Forecast Confidence (Day 1–10)</button>
+                </div>
+                <span class="spline-hint">Click any point on the curve to switch Lead Day</span>
+              </div>
+              <div class="spline-chart-wrap">
+                <canvas id="dribbbleSplineChart"></canvas>
+              </div>
+            </div>
+          </section>
+
+          <!-- ==================== TAB 2: FORECAST MAP (FULL GIS CONFIDENCE MAP) ==================== -->
+          <section id="view-forecast" class="tab-view">
+            <div class="location-header-row">
+              <div>
+                <span class="small-muted-label">Geospatial Forecast Confidence &amp; Error-Prone Area Detection</span>
+                <h1 class="location-title dark:text-white" id="gis-map-heading">Pan-India Forecast Confidence Map (Day 5)</h1>
+              </div>
+              <div class="mode-switch-pills dark:bg-slate-800 dark:border-slate-700">
+                <button class="m-pill active" id="map-btn-bust" onclick="setMapMode('bust')">Bust Prob (%)</button>
+                <button class="m-pill" id="map-btn-conf" onclick="setMapMode('confidence')">Confidence (%)</button>
+              </div>
+            </div>
+
+            <div class="full-map-card dark:bg-slate-800 dark:border-slate-700">
+              <div id="full-gis-map" class="full-gis-map-container"></div>
+              <div class="map-scrubber-bar">
+                <button class="play-pill-btn" onclick="togglePlayDays()" id="play-days-btn">
+                  <i data-lucide="play"></i>
+                  <span id="play-days-label">Play Day 1–10</span>
+                </button>
+                <input type="range" id="gis-day-slider" min="1" max="10" value="5" oninput="setLeadDay(parseInt(this.value))" />
+                <span class="scrubber-readout" id="gis-day-readout">Day 5 (+120h)</span>
+              </div>
+            </div>
+
+            <div class="explain-banner-card dark:bg-slate-800 dark:text-slate-200" id="gis-explain-banner"></div>
+          </section>
+
+          <!-- ==================== TAB 3: LOCATIONS (ERROR-PRONE REGIONS) ==================== -->
+          <section id="view-locations" class="tab-view">
+            <div class="location-header-row">
+              <div>
+                <span class="small-muted-label">Error-Prone Area Detection across 12 Subdivisions</span>
+                <h1 class="location-title dark:text-white">Monitored Indian Regions (<span id="loc-day-label">Day 5</span>)</h1>
+              </div>
+            </div>
+            <div class="locations-cards-grid" id="locations-cards-grid"></div>
+          </section>
+
+          <!-- ==================== TAB 4: ANALYTICS (EXPLAINABLE AI & ANALOGS) ==================== -->
+          <section id="view-analytics" class="tab-view">
+            <div class="location-header-row">
+              <div>
+                <span class="small-muted-label">Explainable AI (SHAP) &amp; Historical Forecast Error Behaviour</span>
+                <h1 class="location-title dark:text-white">Why Forecast Confidence is Low</h1>
+              </div>
+            </div>
+
+            <div class="explain-banner-card dark:bg-slate-800 dark:text-slate-200" id="analytics-narrative-card"></div>
+
+            <h3 class="sub-heading-clean dark:text-white">Matched Historical Forecast Bust Analogs (ERA5 / TIGGE Archive)</h3>
+            <div class="analogs-row-grid" id="analytics-analogs-grid"></div>
+
+            <h3 class="sub-heading-clean dark:text-white">Key Meteorological Drivers of Forecast Error</h3>
+            <div class="drivers-row-grid" id="analytics-drivers-grid"></div>
+          </section>
+
+          <!-- ==================== TAB 5: CALENDAR (DAY 1–10 HORIZON MATRIX) ==================== -->
+          <section id="view-calendar" class="tab-view">
+            <div class="location-header-row">
+              <div>
+                <span class="small-muted-label">Region-Wise Confidence &amp; Bust Probability</span>
+                <h1 class="location-title dark:text-white">Day 1 to Day 10 Medium-Range Matrix</h1>
+              </div>
+              <div class="mode-switch-pills dark:bg-slate-800 dark:border-slate-700">
+                <button class="m-pill active" id="mat-btn-bust" onclick="setMatrixMode('bust')">Bust Prob (%)</button>
+                <button class="m-pill" id="mat-btn-conf" onclick="setMatrixMode('confidence')">Confidence (%)</button>
+              </div>
+            </div>
+            <div class="matrix-card-clean dark:bg-slate-800 dark:border-slate-700">
+              <table class="dribbble-matrix-table" id="dribbble-matrix-table"></table>
+            </div>
+          </section>
+
+          <!-- ==================== TAB 6: SETTINGS / SIMULATOR ==================== -->
+          <section id="view-settings" class="tab-view">
+            <div class="location-header-row">
+              <div>
+                <span class="small-muted-label">Interactive AI Model Sandbox (Ready for Backend API)</span>
+                <h1 class="location-title dark:text-white">AI Forecast Bust Simulator</h1>
+              </div>
+            </div>
+
+            <div class="simulator-card-clean dark:bg-slate-800 dark:border-slate-700">
+              <div class="sim-sliders-grid">
+                <div class="sim-box dark:bg-slate-700/60 dark:border-slate-600">
+                  <div class="sim-top"><span>Forecast Lead Day</span><strong id="sim-v-day">Day 5 (+120h)</strong></div>
+                  <input type="range" id="sim-i-day" min="1" max="10" value="5" oninput="updateSimulator()" />
+                </div>
+                <div class="sim-box dark:bg-slate-700/60 dark:border-slate-600">
+                  <div class="sim-top"><span>Ensemble Spread (mm)</span><strong id="sim-v-spread">52 mm</strong></div>
+                  <input type="range" id="sim-i-spread" min="5" max="120" value="52" oninput="updateSimulator()" />
+                </div>
+                <div class="sim-box dark:bg-slate-700/60 dark:border-slate-600">
+                  <div class="sim-top"><span>Run Flip-Flop (dProg/dt)</span><strong id="sim-v-flip">0.68</strong></div>
+                  <input type="range" id="sim-i-flip" min="0" max="100" value="68" oninput="updateSimulator()" />
+                </div>
+                <div class="sim-box dark:bg-slate-700/60 dark:border-slate-600">
+                  <div class="sim-top"><span>CAPE Instability (J/kg)</span><strong id="sim-v-cape">2400 J/kg</strong></div>
+                  <input type="range" id="sim-i-cape" min="100" max="5000" step="50" value="2400" oninput="updateSimulator()" />
+                </div>
+              </div>
+              <div id="sim-output-banner" class="sim-output-banner dark:bg-slate-700"></div>
+            </div>
+          </section>
+
+        </main>
+
+        <!-- ===============================================================
+             RIGHT PANEL ("Chance of Forecast Bust" + Alternating Split Cards)
+             =============================================================== -->
+        <aside class="right-panel bg-white dark:bg-slate-800 border-l border-gray-200 dark:border-slate-700 transition-colors duration-200">
+
+          <!-- TOP SECTION: CHANCE OF BUST / METEOROLOGICAL REASONS -->
+          <div class="right-section">
+            <div class="right-section-header">
+              <h3 class="dark:text-white">Chance of Forecast Bust</h3>
+              <button class="filter-icon-btn" onclick="switchTab('analytics')" title="View Full Explainable AI">
+                <i data-lucide="sliders-horizontal" class="text-[#4D94DB]"></i>
+              </button>
+            </div>
+
+            <div class="chance-bars-list" id="chance-bars-list">
+              <!-- Populated dynamically -->
+            </div>
+
+            <div class="chance-axis-labels dark:text-slate-300">
+              <span>Reliable</span>
+              <span>Uncertain</span>
+              <span>Severe Bust</span>
+            </div>
+          </div>
+
+          <div class="right-divider dark:bg-slate-700"></div>
+
+          <!-- BOTTOM SECTION: ERROR-PRONE AREAS / MULTI-DAY OUTLOOK -->
+          <div class="right-section">
+            <div class="right-section-header">
+              <h3 class="dark:text-white">High Bust Risk Regions</h3>
+              <span class="small-day-tag" id="right-day-badge">Day 5</span>
+            </div>
+
+            <div class="forecast-split-cards" id="right-split-cards">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+        </aside>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/config.js?t=1"></script>
+  <script src="supabase_auth.js?t=1"></script>
+  <script>
+    // Protect the dashboard route and initialize profile
+    window.addEventListener('DOMContentLoaded', async () => {
+      await requireAuth();
+      if(supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if(session) {
+          const name = session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User';
+          const email = session.user.email;
+          document.getElementById('dropdown-name').textContent = name;
+          document.getElementById('dropdown-email').textContent = email;
+          
+          let avatarUrl = session.user.user_metadata?.avatar_url;
+          if(!avatarUrl) {
+            avatarUrl = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%234D94DB"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>';
+          }
+          document.getElementById('nav-profile-img').src = avatarUrl;
+        }
+      }
+    });
+
+    function toggleProfileDropdown() {
+      document.getElementById('profile-dropdown').classList.toggle('hidden');
+    }
+
+    async function handleDashboardLogout() {
+      if(supabaseClient) {
+        await supabaseClient.auth.signOut();
+        window.location.href = 'index.html';
+      }
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('profile-dropdown');
+      const btn = document.getElementById('profile-btn');
+      if(dropdown && !dropdown.classList.contains('hidden') && !dropdown.contains(e.target) && btn && !btn.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+  </script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
